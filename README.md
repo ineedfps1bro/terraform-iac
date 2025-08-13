@@ -1,4 +1,4 @@
-## Terraform IaC: Multi-Cloud, Multi-Region, Modules, and Policy-as-Code
+## Terraform IaC: Multi-Cloud, Multi-Region, Modules and Policy-as-Code
 
 Automating secure infrastructure provisioning on AWS and Azure using Terraform, with modular code structure and remote state management via S3 and Azure Blob Storage.  
 Includes advanced Infrastructure as Code techniques including multi-region resource deployment using provider aliases, scalable infrastructure with registry modules and Policy-as-Code enforcement with OPA/Conftest.
